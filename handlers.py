@@ -2,32 +2,67 @@
 import re
 #from collections import OrderedDict
 class Table(object):
-    table_reg = re.compile(r'[ ]*[|][ ]+(?P<table_element>[^|]+)[ ]+([|][ ]*$)?')
+    table_reg   = re.compile(r'^[ ]*[|][ ]+(?P<table_element>[^|]+)[ ]+([|][ ]*$)?')
+    head_reg    = re.compile(r'^[ ]*([|][ ][-]+[ ][|]?)+$')
+    detect_reg  = re.compile(r'^[ ]*[|].*[|].*[|][ ]*$')
 
     @classmethod
     def table_find(cls, s):
         match = re.finditer(cls.table_reg, s)
-        return [x.group("table_element") for x in match]
+        l = [x.group("table_element") for x in match]
+        return l if len(l) > 1 else None
 
-    def __init__(self):
-        self.head = []
-        self.body = []
-    def as_list(self):
-        pass
-    def next_line(self):
-        pass
+    @classmethod
+    def is_table(cls, s):
+        return re.fullmatch(cls.detect_reg, s) != None
+
+    def __init__(self, s="", l=[]):
+        self.last = None
+        self.table_contents = l
+        self.handle_lines(s)
+    def to_html(self, l):
+        beg, end = ("<th>", "</th>") if l["type"] == "head" else ("<td>", "</td>")
+        out = ["<tr>"]
+        out += [ f'{beg}{x}{end}' for x in l["fields"] ]
+        out += ["</tr>"]
+
+    def convert(self):
+        l = ["<table>"]
+        for i in self.table_contents:
+            l += self.to_html(i)
+        l += ["</table>"]
+        return l
+    def handle_lines(self, s):
+        for i in s.split("\n"):
+            if self.next_line(i) == None:
+                return None
+        return True
+    def check_head(self, s):
+        if re.fullmatch(self.head_reg) != None and len(self.table_contents) >= 1:
+            self.table_contents[-1]["type"] = "head"
+            return True
+        return None
+    def next_line(self, s):
+        if self.check_head:
+            return True
+        elif (match := self.table_find(s)):
+            self.table_contents.append({"type": "body", "fields": [match]})
+            return True
+        return None
         #out =  ["<th>" + x + "</th>" for x in self.head]
         #out += ["<th>" + x + "</th>" for x in self.head]
+def ignore_handle(self, s):
+    return ( s, "continue")
 
 def title_handle(self, s):
     match = re.search(r'title:[ ]*(?P<title>.*)', s, re.IGNORECASE)
     if match != None:
         self.title = match.group("title")
-        return ( "", "break" )
+        return ( None, "break" )
     else:
         return ( s, "continue" )
 def latex_handle(_self, s):
-    callback = lambda x: '<span class="math inline">\(' + x.group("latex") + '\)</span>'
+    callback = lambda x: f'<span class="math inline">\({ x.group("latex") }\)</span>'
     match = re.sub( r'[$](?P<latex>[^$]*)[$]', callback, s)
     return ( match, "continue" )
 def bold_handle(_self, s):
@@ -39,11 +74,18 @@ def italic_handle(_self, s):
     match = re.sub( r'[*](?P<italic>[^*]*)[*]', callback, s)
     return ( match, "continue" )
 #def table_begin_handle(_self, s):
-def table_handle(_self, s):
-    match = Table.table_find(s)
-    if _self.current_table != None:
-        return Table.next(s)
+
+def table_handle(self, s):
+    if not (gg := Table.is_table(s)):
+        self.table = None
         return (s, "continue")
+    elif self.table == None:
+        self.table = Table(s)
+        return (self.table, "break")
+    else:
+        self.table.next_line(s)
+        return (None, "break")
+
 def header_handle(_self, s):
     def callback(x):
         n = len(x.group("header"))

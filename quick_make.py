@@ -6,10 +6,10 @@ import handlers as hl
 
 class Convert(object):
     handle_funcs = [
+        hl.ignore_handle,
         #---------------------------------Special-------------------------------#
         hl.title_handle,        hl.latex_handle,      hl.bold_handle,   hl.italic_handle,
         #---------------------------------Table---------------------------------#
-        #hl.table_begin_handle,  hl.table_end_handle,  hl.table_handle,
         hl.table_handle,
         #---------------------------------Rest----------------------------------#
         hl.header_handle,       hl.paragraph_handle,
@@ -17,11 +17,10 @@ class Convert(object):
     default_args = {
         "in_file"       : "input.md",
         "out_file"      : "output.html",
+        "charset"       : "utf-8",
         "cdn_latex"     : "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js",
         "title"         : "Notes",
         "in_text"       : lambda s: read_file(s.in_file),
-        "current_table" : None,
-        "structures"    : [],
         "list_out"      : [],
     }
 
@@ -39,37 +38,41 @@ class Convert(object):
     def appe(self, l):      self.list_out = self.list_out + l
     def inse(self, l, p):   self.list_out = self.list_out[:p] + l + self.list_out[p + 1:]
     def make_head(self):
-        latex = f'<script id="MathJax-script" async src="{self.cdn_latex}"></script>'
-        title = f'<title>{self.title}</title>'
-        head_l = [ "<head>", '<meta charset="utf-8"/>', title, latex, '</head>' ]
+        head_l = [
+            "<head>",
+            '<meta charset="{self.charset}"/>',
+            '<title>{self.title}</title>',
+            f'<script id="MathJax-script" async src="{self.cdn_latex}"></script>'
+        ]
         self.prep(head_l)
     def make_doc(self):
         self.prep([ '<!DOCTYPE html>', '<html>' ])
         self.appe([ '</html>' ])
     def handle_line(self, line):
-        self.state = 0
         for i in self.handle_funcs:
             line, c = i(self, line)
-            if c == "break": break
-        self.appe([line])
+            if c == "break" or c == "newtable": break
+        if line != None and line != "":
+            self.appe([line])
     def setup_html(self):
-        il = self.in_text.split("\n")
+        self.table = None               # Prep table var
+        il = self.in_text.split("\n")   # Input Text handling happens line by line
         self.prep(['<body>'])
         for i in il:
             self.handle_line(i)
         self.appe(['</body>'])
     def convert_structures(self):
-        pass
+        for i in range(0, len(self.list_out)):
+            if type(self.list_out[i]) == hl.Table:
+                self.list_out[i] = "\n".join(self.list_out[i].convert())
+
+
     def convert_html(self, l=[]):
         self.list_out = l
-        # Parse through markdown, creating body and setting options
-        self.setup_html()
-        # Make head of list
-        self.make_head()
-        # Make document
-        self.make_doc()
-        # Convert structures [Table] in list to strings
-        self.convert_structures()
+        self.setup_html()           # Parse through markdown, creating body and setting options
+        self.make_head()            # Make head of list
+        self.make_doc()             # Make document
+        self.convert_structures()   # Convert structures [Table] in list to strings
     def convert_html_file(self):
         self.convert_html()
         print(str(self))
