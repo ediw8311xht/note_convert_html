@@ -3,7 +3,7 @@ import re
 #from collections import OrderedDict
 class Table(object):
     table_reg   = re.compile(r'[ ]*[|](?P<table_element>[^|]+)([|][ ]*$)?')
-    head_reg    = re.compile(r'^[ ]*([|][ ][-]+[ ][|]?)+$')
+    head_reg    = re.compile(r'[ ]*[|]([ ]*[-]+[ ]*[|])*$')
     detect_reg  = re.compile(r'^[ ]*[|].*[|].*[|][ ]*$')
 
     @classmethod
@@ -16,9 +16,9 @@ class Table(object):
     def is_table(cls, s):
         return re.fullmatch(cls.detect_reg, s) != None
 
-    def __init__(self, s="", l=[]):
+    def __init__(self, s=""):
         self.last = None
-        self.table_contents = l
+        self.table_contents = []
         self.handle_lines(s)
     def to_html(self, l):
         beg, end = ("<th>", "</th>") if l["type"] == "head" else ("<td>", "</td>")
@@ -83,6 +83,7 @@ def table_handle(self, s):
         return (s, "continue")
     elif self.table == None:
         self.table = Table(s)
+        print(self.table)
         return (self.table, "break")
     else:
         print("HERE", s)

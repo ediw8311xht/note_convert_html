@@ -21,7 +21,7 @@ $3x+5$
 Hello *italic* and this is **bold**.
 This **bold** and this is ***bold italic***.
 
-| 3x    | 5x    | 200    | abcd    |
-| ----- | ----- | ----- | ----- |
-|  94    |       | | |
-|  94    |       | | |
+| Rat F  | Bat J | New Man | Fun Time |
+|  -----  |  -----  |  -----  |  -----  |
+|  Ball   | Hello   | Goblin  Tusk Funny  |  Gears of War |
+|  Wall   | Goodbye Moon | Nobody Cares | funnny | jjjjjjjjjj |
