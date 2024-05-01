@@ -2,15 +2,15 @@
 import re
 #from collections import OrderedDict
 class Table(object):
-    table_reg   = re.compile(r'^[ ]*[|][ ]+(?P<table_element>[^|]+)[ ]+([|][ ]*$)?')
+    table_reg   = re.compile(r'[ ]*[|](?P<table_element>[^|]+)([|][ ]*$)?')
     head_reg    = re.compile(r'^[ ]*([|][ ][-]+[ ][|]?)+$')
     detect_reg  = re.compile(r'^[ ]*[|].*[|].*[|][ ]*$')
 
     @classmethod
     def table_find(cls, s):
         match = re.finditer(cls.table_reg, s)
-        l = [x.group("table_element") for x in match]
-        return l if len(l) > 1 else None
+        l = [x.group("table_element").strip(" ") for x in match]
+        return l if len(l) > 0 else None
 
     @classmethod
     def is_table(cls, s):
@@ -25,10 +25,12 @@ class Table(object):
         out = ["<tr>"]
         out += [ f'{beg}{x}{end}' for x in l["fields"] ]
         out += ["</tr>"]
+        return out
 
     def convert(self):
         l = ["<table>"]
         for i in self.table_contents:
+            print("-----------", i)
             l += self.to_html(i)
         l += ["</table>"]
         return l
@@ -38,15 +40,15 @@ class Table(object):
                 return None
         return True
     def check_head(self, s):
-        if re.fullmatch(self.head_reg) != None and len(self.table_contents) >= 1:
+        if re.fullmatch(self.head_reg, s) != None and len(self.table_contents) >= 1:
             self.table_contents[-1]["type"] = "head"
             return True
         return None
     def next_line(self, s):
-        if self.check_head:
+        if self.check_head(s) != None:
             return True
         elif (match := self.table_find(s)):
-            self.table_contents.append({"type": "body", "fields": [match]})
+            self.table_contents.append({"type": "body", "fields": match})
             return True
         return None
         #out =  ["<th>" + x + "</th>" for x in self.head]
@@ -83,6 +85,7 @@ def table_handle(self, s):
         self.table = Table(s)
         return (self.table, "break")
     else:
+        print("HERE", s)
         self.table.next_line(s)
         return (None, "break")
 
@@ -90,9 +93,9 @@ def header_handle(_self, s):
     def callback(x):
         n = len(x.group("header"))
         return f'<h{ n }>{ x.group("contents") }</h{ n }>'
-
     match = re.subn( r'^(?P<header>[#]{1,5})[ ](?P<contents>.*)$', callback, s)
     return (match[0], "break") if match[1] > 0 else (match[0], "continue")
+
 def paragraph_handle(_self, s):
     return ("<p>" + s + "</p>", "break")
 

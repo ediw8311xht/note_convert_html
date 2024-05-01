@@ -51,7 +51,7 @@ class Convert(object):
     def handle_line(self, line):
         for i in self.handle_funcs:
             line, c = i(self, line)
-            if c == "break" or c == "newtable": break
+            if c == "break": break
         if line != None and line != "":
             self.appe([line])
     def setup_html(self):
@@ -83,6 +83,6 @@ def main():
 
 if __name__ == "__main__":
     a = Convert()
-    print(a.convert_html())
+    #print(a.convert_html())
     print(a.convert_html_file())
     #print(a.title)
