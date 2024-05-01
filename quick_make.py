@@ -40,8 +40,8 @@ class Convert(object):
     def make_head(self):
         head_l = [
             "<head>",
-            '<meta charset="{self.charset}"/>',
-            '<title>{self.title}</title>',
+            f'<meta charset="{self.charset}"/>',
+            f'<title>{self.title}</title>',
             f'<script id="MathJax-script" async src="{self.cdn_latex}"></script>'
         ]
         self.prep(head_l)
