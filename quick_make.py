@@ -15,18 +15,19 @@ class Convert(object):
             #---------------------------------Rest----------------------------------#
             hl.header_handle,       hl.paragraph_handle,
         ],
-        "in_file"       : "input.md",
-        "out_file"      : "output.html",
-        "charset"       : "utf-8",
-        "cdn_latex"     : "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js",
-        "title"         : "Notes",
-        "in_text"       : lambda s: read_file(s.in_file),
-        "styles"        : ["test.css"],
-        "states"        : {"latex": False, "italic": False, "bold": False, "table": False, "paragraph": False},
-        "state_tags"    : {
-            "latex" :   ( (r'[$]', r'[$]'),         ('<span class="math inline">\(', '\)</span>')),
-            "bold"  :   ( (r'[*][*]', r'[*][*]'),   ('<b>', '</b>')),
-            "italic":   ( (r'[*]', r'[*]'),         ('<i>', '</i>')),
+        "in_file"           : "input.md",
+        "out_file"          : "output.html",
+        "charset"           : "utf-8",
+        "cdn_latex"         : "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js",
+        "title"             : "Notes",
+        "in_text"           : lambda s: read_file(s.in_file),
+        "styles"            : ["test.css"],
+        "states"            : {"latex": False, "italic": False, "bold": False, "table": False, "paragraph": False},
+        "state_tags"        : {
+            "latex"    : (  ( r'[$]',           r'[$]'        ),  ('<span class="math inline">\(', '\)</span>' )   ),
+            "bold"     : (  ( r'[*][*]',        r'[*][*]'     ),  ('<b>',                           '</b>'     )   ),
+            "italic"   : (  ( r'[*]',           r'[*]'        ),  ('<i>',                           '</i>'     )   ),
+            "paragraph": (  ( r'^(?=[^ \t])',   r'^[ \t]*$'   ),  ('<p>',                           '</p>'     )   ),
         },
     }
 
@@ -65,19 +66,23 @@ class Convert(object):
             self.appe([line])
     def reset_states(self):
         self.states = deepcopy(self.default_args["states"])
+    def end_states(self):
+        for key, val in self.states.items():
+            if val:
+                self.appe([self.state_tags[key][1][1]])
+            self.states[key] = False
     def setup_html(self):
         self.reset_states()
         il = self.in_text.split("\n")   # Input Text handling happens line by line
         self.prep(['<body>'])
         for i in il:
             self.handle_line(i)
+        self.end_states()
         self.appe(['</body>'])
     def convert_structures(self):
         for i in range(0, len(self.list_out)):
             if type(self.list_out[i]) == hl.Table:
                 self.list_out[i] = "\n".join(self.list_out[i].convert())
-
-
     def convert_html(self, l=[]):
         self.list_out = l
         self.setup_html()           # Parse through markdown, creating body and setting options

@@ -5,10 +5,10 @@ from qmake_table import Table
 def tag_replace(self, s, find, replace, state):
     s_find =    find[0] if not self.states[state] else    find[1]
     s_repl = replace[0] if not self.states[state] else replace[1]
-    match = re.sub(s_find, s_repl, s, 1)
-    if match != s:
+    if (match := re.search(s_find, s)) != None:
+        span = match.span()
         self.states[state] = not self.states[state]
-        return tag_replace(self, match, find, replace, state)
+        return s[:span[0]] + s_repl + tag_replace(self, s[span[1]:], find, replace, state)
     else:
         return s
 
@@ -53,13 +53,19 @@ def header_handle(_self, s):
     return (match[0], "break") if match[1] > 0 else (match[0], "continue")
 
 def paragraph_handle(self, s):
-    subbed = tag_replace(self, s, (r'[*]', r'[*]'), ("<i>", "</i>"), "italic")
-    return ("<p>" + s + "</p>", "break")
+    subbed = tag_replace(self, s, *self.state_tags["paragraph"], "paragraph")
+    return (subbed, "continue")
 
 
 if __name__ == "__main__":
-    g = "| asdfa | kdjfkj | kasdfadf |"
-    print(Table.table_find(g))
+    from quick_make import Convert
+    a = Convert()
+    g = 'Hello *italic* and this is **bold**. This **bold** and this is ***bold italic***.'
+    g = 'Hello italic and this is bold. This bold and this is bold italic.'
+    print(bold_handle(a, g))
+
+    #g = "| asdfa | kdjfkj | kasdfadf |"
+    #print(Table.table_find(g))
     #print(latex_handle("", "help: $3+3$ out"))
     #print(italic_handle("", "**asdf**asdfadf**asdfadf**"))
 
