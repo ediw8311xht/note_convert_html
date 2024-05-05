@@ -2,8 +2,16 @@
 import re
 from qmake_table import Table
 
-def ignore_handle(_self, s):
-    return ( s, "continue")
+def tag_replace(self, s, find, replace, state):
+    s_find =    find[0] if not self.states[state] else    find[1]
+    s_repl = replace[0] if not self.states[state] else replace[1]
+    match = re.sub(s_find, s_repl, s, 1)
+    if match != s:
+        self.states[state] = not self.states[state]
+        return tag_replace(self, match, find, replace, state)
+    else:
+        return s
+
 def title_handle(self, s):
     match = re.search(r'title:[ ]*(?P<title>.*)', s, re.IGNORECASE)
     if match != None:
@@ -11,27 +19,18 @@ def title_handle(self, s):
         return ( None, "break" )
     else:
         return ( s, "continue" )
-def latex_handle(_self, s):
-    callback = lambda x: f'<span class="math inline">\({ x.group("latex") }\)</span>'
-    match = re.sub( r'[$](?P<latex>[^$]*)[$]', callback, s)
-    return ( match, "continue" )
+
+def latex_handle(self, s):
+    subbed = tag_replace(self, s, *self.state_tags["latex"], "latex")
+    return (subbed, "continue") if not self.states["latex"] else (subbed, "break")
+
 def bold_handle(self, s):
-    tag = "<b>" if not self.states["bold"] else "</b>"
-    match = s.replace( '**', tag, 1)
-    if match != s:
-        self.states["bold"] = not self.states["bold"]
-        return bold_handle(self, match)
-    else:
-        return ( match, "continue" )
+    subbed = tag_replace(self, s, *self.state_tags["bold"], "bold")
+    return (subbed, "continue")
+
 def italic_handle(self, s):
-    tag = "<i>" if not self.states["italic"] else "</i>"
-    match = s.replace( '*', tag, 1)
-    if match != s:
-        self.states["italic"] = not self.states["italic"]
-        return italic_handle(self, match)
-    else:
-        return ( match, "continue" )
-#def table_begin_handle(_self, s):
+    subbed = tag_replace(self, s, *self.state_tags["italic"], "italic")
+    return (subbed, "continue")
 
 def table_handle(self, s):
     if not (gg := Table.is_table(s)):
@@ -53,7 +52,8 @@ def header_handle(_self, s):
     match = re.subn( r'^(?P<header>[#]{1,5})[ ](?P<contents>.*)$', callback, s)
     return (match[0], "break") if match[1] > 0 else (match[0], "continue")
 
-def paragraph_handle(_self, s):
+def paragraph_handle(self, s):
+    subbed = tag_replace(self, s, (r'[*]', r'[*]'), ("<i>", "</i>"), "italic")
     return ("<p>" + s + "</p>", "break")
 
 

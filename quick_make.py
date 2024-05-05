@@ -1,29 +1,33 @@
 #!/bin/python3
 import re
+from copy import deepcopy
 from   qmake_helpers   import read_file, write_file
 import qmake_handlers  as hl
 import qmake_styles    as sl
 
 class Convert(object):
-    handle_funcs = [
-        hl.ignore_handle,
-        #---------------------------------Special-------------------------------#
-        hl.title_handle,        hl.latex_handle,      hl.bold_handle,   hl.italic_handle,
-        #---------------------------------Table---------------------------------#
-        hl.table_handle,
-        #---------------------------------Rest----------------------------------#
-        hl.header_handle,       hl.paragraph_handle,
-    ]
     default_args = {
+        "handle_funcs": [
+            #---------------------------------Special-------------------------------#
+            hl.title_handle,        hl.latex_handle,      hl.bold_handle,   hl.italic_handle,
+            #---------------------------------Table---------------------------------#
+            hl.table_handle,
+            #---------------------------------Rest----------------------------------#
+            hl.header_handle,       hl.paragraph_handle,
+        ],
         "in_file"       : "input.md",
         "out_file"      : "output.html",
         "charset"       : "utf-8",
         "cdn_latex"     : "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js",
         "title"         : "Notes",
         "in_text"       : lambda s: read_file(s.in_file),
-        "list_out"      : [],
         "styles"        : ["test.css"],
-        "states"        : {"italic": False, "bold": False, "table": False}
+        "states"        : {"latex": False, "italic": False, "bold": False, "table": False, "paragraph": False},
+        "state_tags"    : {
+            "latex" :   ( (r'[$]', r'[$]'),         ('<span class="math inline">\(', '\)</span>')),
+            "bold"  :   ( (r'[*][*]', r'[*][*]'),   ('<b>', '</b>')),
+            "italic":   ( (r'[*]', r'[*]'),         ('<i>', '</i>')),
+        },
     }
 
     def __repr_(self): return "\n".join(self.list_out)
@@ -32,7 +36,7 @@ class Convert(object):
         self.handle_args(args)
     def handle_args(self, d):
         for k, i in self.default_args.items():
-            set = d[k] if k in d else i
+            set = deepcopy(d[k]) if k in d else i
             if callable(set):
                 set = set(self)
             setattr(self, k, set)
@@ -60,7 +64,7 @@ class Convert(object):
         if line != None and line != "":
             self.appe([line])
     def reset_states(self):
-        self.states = {x: False for x in self.states}
+        self.states = deepcopy(self.default_args["states"])
     def setup_html(self):
         self.reset_states()
         il = self.in_text.split("\n")   # Input Text handling happens line by line

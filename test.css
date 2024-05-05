@@ -11,12 +11,16 @@ table {
   background-color: black;
   padding: 10px;
   table-layout: fixed;
-  width: max(80vw, 500px)
+  width: max(80vw, 500px);
+  border-collapse: collapse;
+  border: 1px solid #111 !important;
 }
 
 table th {
-  background-color: #111;
+  background-color: #025 !important;
 }
 
-table tr {
+table tr td {
+  border: 1px solid green;
+  padding: 5px;
 }
