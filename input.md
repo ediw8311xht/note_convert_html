@@ -20,7 +20,8 @@ $3x+5$
 2.  Bye
 3.  Guy
 
-Hello *italic* and this is **bold**. This **bold** and this is ***bold italic***.
+Hello *italic* and this is **bold**. This **bold** and this is ***bold
+italic***.
 
 | Rat F | Bat J        | New Man           | Fun Time     |
 |-------|--------------|-------------------|--------------|

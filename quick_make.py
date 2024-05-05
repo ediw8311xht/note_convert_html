@@ -1,6 +1,5 @@
 #!/bin/python3
 import re
-#from collections           import OrderedDict
 from   qmake_helpers   import read_file, write_file
 import qmake_handlers  as hl
 import qmake_styles    as sl

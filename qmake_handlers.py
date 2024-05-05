@@ -1,10 +1,9 @@
 #!/bin/python3
 import re
 from qmake_table import Table
-#from collections import OrderedDict
-def ignore_handle(self, s):
-    return ( s, "continue")
 
+def ignore_handle(_self, s):
+    return ( s, "continue")
 def title_handle(self, s):
     match = re.search(r'title:[ ]*(?P<title>.*)', s, re.IGNORECASE)
     if match != None:
@@ -16,14 +15,22 @@ def latex_handle(_self, s):
     callback = lambda x: f'<span class="math inline">\({ x.group("latex") }\)</span>'
     match = re.sub( r'[$](?P<latex>[^$]*)[$]', callback, s)
     return ( match, "continue" )
-def bold_handle(_self, s):
-    callback = lambda x: f'<b>{ x.group("bold") }</b>'
-    match = re.sub( r'[*][*](?P<bold>.*?)[*][*]', callback, s)
-    return ( match, "continue" )
-def italic_handle(_self, s):
-    callback = lambda x: f'<i>{ x.group("italic") }</i>'
-    match = re.sub( r'[*](?P<italic>[^*]*)[*]', callback, s)
-    return ( match, "continue" )
+def bold_handle(self, s):
+    tag = "<b>" if not self.states["bold"] else "</b>"
+    match = s.replace( '**', tag, 1)
+    if match != s:
+        self.states["bold"] = not self.states["bold"]
+        return bold_handle(self, match)
+    else:
+        return ( match, "continue" )
+def italic_handle(self, s):
+    tag = "<i>" if not self.states["italic"] else "</i>"
+    match = s.replace( '*', tag, 1)
+    if match != s:
+        self.states["italic"] = not self.states["italic"]
+        return italic_handle(self, match)
+    else:
+        return ( match, "continue" )
 #def table_begin_handle(_self, s):
 
 def table_handle(self, s):
