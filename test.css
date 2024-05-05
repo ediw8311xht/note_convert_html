@@ -1,0 +1,22 @@
+
+body {
+  font-family: monospace;
+  font-size: 120%;
+  margin-left: 20px;
+}
+
+table {
+  margin-top: 20px;
+  margin-left: min(10vw, 100px);
+  background-color: black;
+  padding: 10px;
+  table-layout: fixed;
+  width: max(80vw, 500px)
+}
+
+table th {
+  background-color: #111;
+}
+
+table tr {
+}

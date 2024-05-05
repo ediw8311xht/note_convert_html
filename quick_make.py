@@ -1,8 +1,9 @@
 #!/bin/python3
 import re
 #from collections           import OrderedDict
-from maceurtlib.MacHelpers import read_file, write_file
-import handlers as hl
+from   qmake_helpers   import read_file, write_file
+import qmake_handlers  as hl
+import qmake_styles    as sl
 
 class Convert(object):
     handle_funcs = [
@@ -22,6 +23,8 @@ class Convert(object):
         "title"         : "Notes",
         "in_text"       : lambda s: read_file(s.in_file),
         "list_out"      : [],
+        "styles"        : ["test.css"],
+        "states"        : {"italic": False, "bold": False, "table": False}
     }
 
     def __repr_(self): return "\n".join(self.list_out)
@@ -38,12 +41,15 @@ class Convert(object):
     def appe(self, l):      self.list_out = self.list_out + l
     def inse(self, l, p):   self.list_out = self.list_out[:p] + l + self.list_out[p + 1:]
     def make_head(self):
+        style_link = lambda x: f'<link rel="stylesheet" type="text/css" href="{x}"/>'
         head_l = [
             "<head>",
             f'<meta charset="{self.charset}"/>',
             f'<title>{self.title}</title>',
             f'<script id="MathJax-script" async src="{self.cdn_latex}"></script>'
         ]
+        head_l += [style_link(x) for x in self.styles]
+        head_l += ["</head>"]
         self.prep(head_l)
     def make_doc(self):
         self.prep([ '<!DOCTYPE html>', '<html>' ])
@@ -54,8 +60,10 @@ class Convert(object):
             if c == "break": break
         if line != None and line != "":
             self.appe([line])
+    def reset_states(self):
+        self.states = {x: False for x in self.states}
     def setup_html(self):
-        self.table = None               # Prep table var
+        self.reset_states()
         il = self.in_text.split("\n")   # Input Text handling happens line by line
         self.prep(['<body>'])
         for i in il:
