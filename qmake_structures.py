@@ -30,7 +30,6 @@ class HtmlTable(object):
     def convert(self):
         l = ["<table>"]
         for i in self.table_contents:
-            print("-----------", i)
             l += self.to_html(i)
         l += ["</table>"]
         return l

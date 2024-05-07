@@ -45,13 +45,13 @@ def table_handle(self, s):
         self.states["table"].next_line(s)
         return (None, "break")
 
-def list_handle(self, s,state, reg, start, end):
+def list_handle(self, s, state, reg, start, end):
     callback = lambda x: "<li>" + x.group("list_element") + "</li>"
     match = re.sub(reg, callback, s)
     if match != s:
-        match = (start, match) if not self.states[state] else match
+        match = start + match if not self.states[state] else match
         self.states[state] = True
-        return (match, "break")
+        return (match, "continue")
     else:
         s = (end, s) if self.states[state] else s
         self.states[state] = False

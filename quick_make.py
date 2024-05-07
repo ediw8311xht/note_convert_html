@@ -107,7 +107,6 @@ class Convert(object):
         self.convert_structures()   # Convert structures [HtmlTable] in list to strings
     def convert_html_file(self):
         self.convert_html()
-        print(str(self))
         return write_file(self.out_file, str(self))
 
 def main():
