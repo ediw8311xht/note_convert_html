@@ -1,6 +1,6 @@
 #!/bin/python3
 import re
-from qmake_table import Table
+import qmake_structures as st
 
 def tag_replace(self, s, find, replace, state):
     s_find =    find[0] if not self.states[state] else    find[1]
@@ -33,17 +33,37 @@ def italic_handle(self, s):
     return (subbed, "continue")
 
 def table_handle(self, s):
-    if not (gg := Table.is_table(s)):
+    if not (gg := st.HtmlTable.is_table(s)):
         self.states["table"] = False
         return (s, "continue")
     elif self.states["table"] == False:
-        self.states["table"] = Table(s)
+        self.states["table"] = st.HtmlTable(s)
         #print(self.states["table"])
         return (self.states["table"], "break")
     else:
         #print("HERE", s)
         self.states["table"].next_line(s)
         return (None, "break")
+
+def list_handle(self, s,state, reg, start, end):
+    callback = lambda x: "<li>" + x.group("list_element") + "</li>"
+    match = re.sub(reg, callback, s)
+    if match != s:
+        match = (start, match) if not self.states[state] else match
+        self.states[state] = True
+        return (match, "break")
+    else:
+        s = (end, s) if self.states[state] else s
+        self.states[state] = False
+        return (s, "continue")
+
+def unordered_list_handle(self, s):
+    reg = r'^-[ ](?P<list_element>.+)$'
+    return list_handle(self, s, "unordered_list", reg, "<ul>", "</ul>")
+
+def ordered_list_handle(self, s):
+    reg = r'^[0-9]+[.][ ](?P<list_element>.+)$'
+    return list_handle(self, s, "ordered_list", reg, "<ol>", "</ol>")
 
 def header_handle(_self, s):
     def callback(x):
@@ -63,9 +83,4 @@ if __name__ == "__main__":
     g = 'Hello *italic* and this is **bold**. This **bold** and this is ***bold italic***.'
     g = 'Hello italic and this is bold. This bold and this is bold italic.'
     print(bold_handle(a, g))
-
-    #g = "| asdfa | kdjfkj | kasdfadf |"
-    #print(Table.table_find(g))
-    #print(latex_handle("", "help: $3+3$ out"))
-    #print(italic_handle("", "**asdf**asdfadf**asdfadf**"))
 

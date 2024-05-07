@@ -1,7 +1,7 @@
 #!/bin/python3
 import re
 
-class Table(object):
+class HtmlTable(object):
     table_reg   = re.compile(r'[ ]*[|](?P<table_element>[^|]+)([|][ ]*$)?')
     head_reg    = re.compile(r'[ ]*[|]([ ]*[-]+[ ]*[|])*$')
     detect_reg  = re.compile(r'^[ ]*[|].*[|].*[|][ ]*$')

@@ -1,19 +1,26 @@
 #!/bin/python3
 import re
 from copy import deepcopy
-from   qmake_helpers   import read_file, write_file
-import qmake_handlers  as hl
-import qmake_styles    as sl
+from    qmake_helpers   import read_file, write_file
+import  qmake_structures as st
+import  qmake_handlers   as hl
+import  qmake_styles     as sl
 
 class Convert(object):
     default_args = {
+        #   Remove Handler(s) to remove that functionality.   #
+        #   Order of Handlerrs must be kept.                  #
         "handle_funcs": [
-            #---------------------------------Special-------------------------------#
-            hl.title_handle,        hl.latex_handle,      hl.bold_handle,   hl.italic_handle,
-            #---------------------------------Table---------------------------------#
+            #---------------------------- Level 1 Handlers -------------------------#
+            hl.title_handle,            hl.latex_handle,
+            #---------------------------- Level 2 Handlers -------------------------#
+            hl.bold_handle,             hl.italic_handle,
+            #---------------------------- Level 3 Handlers -------------------------#
             hl.table_handle,
-            #---------------------------------Rest----------------------------------#
-            hl.header_handle,       hl.paragraph_handle,
+            #---------------------------- Level 4 Handlers -------------------------#
+            hl.unordered_list_handle,   hl.ordered_list_handle,
+            #---------------------------- Level 5 Handlers -------------------------#
+            hl.header_handle,           hl.paragraph_handle,
         ],
         "in_file"           : "input.md",
         "out_file"          : "output.html",
@@ -22,7 +29,13 @@ class Convert(object):
         "title"             : "Notes",
         "in_text"           : lambda s: read_file(s.in_file),
         "styles"            : ["test.css"],
-        "states"            : {"latex": False, "italic": False, "bold": False, "table": False, "paragraph": False},
+        "states"            : {
+            #    [ Tag     ][ States ]    #
+            "latex": False, "italic": False, "bold": False,  "paragraph": False,
+            #    [ Special ][ States ]    #
+            "table": False, "unordered_list": False, "ordered_list": False,
+        },
+        "structures": [st.HtmlTable],
         "state_tags"        : {
             "latex"    : (  ( r'[$]',           r'[$]'        ),  ('<span class="math inline">\(', '\)</span>' )   ),
             "bold"     : (  ( r'[*][*]',        r'[*][*]'     ),  ('<b>',                           '</b>'     )   ),
@@ -61,6 +74,9 @@ class Convert(object):
     def handle_line(self, line):
         for i in self.handle_funcs:
             line, c = i(self, line)
+            if type(line) == tuple:
+                self.appe([line[0]])
+                line = line[1]
             if c == "break": break
         if line != None and line != "":
             self.appe([line])
@@ -68,7 +84,7 @@ class Convert(object):
         self.states = deepcopy(self.default_args["states"])
     def end_states(self):
         for key, val in self.states.items():
-            if val:
+            if val and key in self.state_tags:
                 self.appe([self.state_tags[key][1][1]])
             self.states[key] = False
     def setup_html(self):
@@ -81,14 +97,14 @@ class Convert(object):
         self.appe(['</body>'])
     def convert_structures(self):
         for i in range(0, len(self.list_out)):
-            if type(self.list_out[i]) == hl.Table:
+            if type(self.list_out[i]) in self.structures:
                 self.list_out[i] = "\n".join(self.list_out[i].convert())
     def convert_html(self, l=[]):
         self.list_out = l
         self.setup_html()           # Parse through markdown, creating body and setting options
         self.make_head()            # Make head of list
         self.make_doc()             # Make document
-        self.convert_structures()   # Convert structures [Table] in list to strings
+        self.convert_structures()   # Convert structures [HtmlTable] in list to strings
     def convert_html_file(self):
         self.convert_html()
         print(str(self))
