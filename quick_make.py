@@ -1,10 +1,10 @@
 #!/bin/python3
 import re
-from copy import deepcopy
-from    qmake_helpers   import read_file, write_file
-import  qmake_structures as st
-import  qmake_handlers   as hl
-import  qmake_styles     as sl
+from    copy                import deepcopy
+from    qmake_helpers       import read_file, write_file
+import  qmake_structures    as st
+import  qmake_handlers      as hl
+import  qmake_styles        as sl
 
 class Convert(object):
     default_args = {
@@ -14,20 +14,18 @@ class Convert(object):
             #---------------------------- Level 1 Handlers -------------------------#
             hl.title_handle,            hl.latex_handle,
             #---------------------------- Level 2 Handlers -------------------------#
-            hl.bold_handle,             hl.italic_handle,
+            hl.link_handle,             hl.bold_handle,             hl.italic_handle,
             #---------------------------- Level 3 Handlers -------------------------#
-            hl.table_handle,
+            hl.table_handle,            hl.unordered_list_handle,   hl.ordered_list_handle,
             #---------------------------- Level 4 Handlers -------------------------#
-            hl.unordered_list_handle,   hl.ordered_list_handle,
-            #---------------------------- Level 5 Handlers -------------------------#
             hl.header_handle,           hl.paragraph_handle,
         ],
-        "in_file"           : "input.md",
+        "in_files"          : ["input.md"],
         "out_file"          : "output.html",
         "charset"           : "utf-8",
         "cdn_latex"         : "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js",
         "title"             : "Notes",
-        "in_text"           : lambda s: read_file(s.in_file),
+        "in_texts"           : lambda s: [read_file(x) for x in s.in_files],
         "styles"            : ["test.css"],
         "states"            : {
             #    [ Tag     ][ States ]    #
@@ -87,13 +85,18 @@ class Convert(object):
             if val and key in self.state_tags:
                 self.appe([self.state_tags[key][1][1]])
             self.states[key] = False
-    def setup_html(self):
+    def handle_text(self, text):
         self.reset_states()
-        il = self.in_text.split("\n")   # Input Text handling happens line by line
-        self.prep(['<body>'])
-        for i in il:
+        text_split = text.split("\n")   # Input Text handling happens line by line
+        for i in text_split:
             self.handle_line(i)
         self.end_states()
+    def setup_html(self):
+        for i in self.in_texts:
+            self.appe(['<div>'])
+            self.handle_text(i)
+            self.appe(['</div>'])
+        self.prep(['<body>'])
         self.appe(['</body>'])
     def convert_structures(self):
         for i in range(0, len(self.list_out)):

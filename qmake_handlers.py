@@ -24,6 +24,11 @@ def latex_handle(self, s):
     subbed = tag_replace(self, s, *self.state_tags["latex"], "latex")
     return (subbed, "continue") if not self.states["latex"] else (subbed, "break")
 
+def link_handle(_self, s):
+    callback = lambda x: f'<a href="{x.group("link")}">{x.group("text")}</a>'
+    subbed = re.sub(r'\[(?P<text>[^\]]*)\]\((?P<link>[^)]*)\)', callback, s)
+    return (subbed, "continue")
+
 def bold_handle(self, s):
     subbed = tag_replace(self, s, *self.state_tags["bold"], "bold")
     return (subbed, "continue")
