@@ -12,7 +12,7 @@ class Convert(object):
         #   Order of Handlerrs must be kept.                  #
         "handle_funcs": [
             #---------------------------- Level 1 Handlers -------------------------#
-            hl.title_handle,            hl.latex_handle,
+            hl.code_handle,             hl.title_handle,            hl.latex_handle,
             #---------------------------- Level 2 Handlers -------------------------#
             hl.link_handle,             hl.bold_handle,             hl.italic_handle,
             #---------------------------- Level 3 Handlers -------------------------#
@@ -25,20 +25,16 @@ class Convert(object):
         "charset"           : "utf-8",
         "cdn_latex"         : "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js",
         "title"             : "Notes",
-        "in_texts"           : lambda s: [read_file(x) for x in s.in_files],
+        "in_texts"          : lambda s: [read_file(x) for x in s.in_files],
         "styles"            : ["test.css"],
-        "states"            : {
-            #    [ Tag     ][ States ]    #
-            "latex": False, "italic": False, "bold": False,  "paragraph": False,
-            #    [ Special ][ States ]    #
-            "table": False, "unordered_list": False, "ordered_list": False,
-        },
+        "states"            : dict.fromkeys(["code", "latex", "italic", "bold", "paragraph",
+                                             "table", "unordered_list", "ordered_list"], False),
         "structures": [st.HtmlTable],
         "state_tags"        : {
-            "latex"    : (  ( r'[$]',           r'[$]'        ),  ('<span class="math inline">\(', '\)</span>' )   ),
-            "bold"     : (  ( r'[*][*]',        r'[*][*]'     ),  ('<b>',                           '</b>'     )   ),
-            "italic"   : (  ( r'[*]',           r'[*]'        ),  ('<i>',                           '</i>'     )   ),
-            "paragraph": (  ( r'^(?=[^ \t])',   r'^[ \t]*$'   ),  ('<p>',                           '</p>'     )   ),
+            "code"     : (( r'```',           r'```'      ),  ('<pre><code>',                   '</code></pre>' )),
+            "latex"    : (( r'[$]',           r'[$]'      ),  ('<span class="math inline">\(',  '\)</span>'     )),
+            "bold"     : (( r'[*][*]',        r'[*][*]'   ),  ('<b>',                            '</b>'         )),
+            "italic"   : (( r'[*]',           r'[*]'      ),  ('<i>',                            '</i>'         )),
         },
     }
 

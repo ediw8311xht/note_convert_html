@@ -11,6 +11,9 @@ def tag_replace(self, s, find, replace, state):
         return s[:span[0]] + s_repl + tag_replace(self, s[span[1]:], find, replace, state)
     else:
         return s
+def code_handle(self, s):
+    subbed = tag_replace(self, s, *self.state_tags["code"], "code")
+    return (subbed, "break") if self.states["code"] else (subbed, "continue")
 
 def title_handle(self, s):
     match = re.search(r'title:[ ]*(?P<title>.*)', s, re.IGNORECASE)
@@ -82,8 +85,18 @@ def line_break_handle(_self, s):
     return (match, "continue")
 
 def paragraph_handle(self, s):
-    subbed = tag_replace(self, s, *self.state_tags["paragraph"], "paragraph")
-    return (subbed, "continue")
+    empty_reg       = r'^(</[^>]*>|[ \t])*$'
+    non_empty_reg   = r'^(?P<endblocks>(</[^>]*>)*)'
+    non_empty_callback = lambda x: x.group("endblocks") + "<p>"
+    if (match := re.fullmatch(empty_reg, s)) != None:
+        if self.states["paragraph"]:
+            self.states["paragraph"] = False
+            return (s.replace(" ", "") + "</p>", "continue")
+    elif not self.states["paragraph"]:
+        subbed = re.sub(non_empty_reg, non_empty_callback, s)
+        self.states["paragraph"] = True
+        return (subbed, "continue")
+    return (s, "continue")
 
 
 if __name__ == "__main__":
