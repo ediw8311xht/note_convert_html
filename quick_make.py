@@ -18,7 +18,7 @@ class Convert(object):
             #---------------------------- Level 3 Handlers -------------------------#
             hl.table_handle,            hl.unordered_list_handle,   hl.ordered_list_handle,
             #---------------------------- Level 4 Handlers -------------------------#
-            hl.header_handle,           hl.paragraph_handle,
+            hl.header_handle,           hl.line_break_handle,       hl.paragraph_handle,
         ],
         "in_files"          : ["input.md"],
         "out_file"          : "output.html",

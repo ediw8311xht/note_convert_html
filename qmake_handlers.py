@@ -77,6 +77,10 @@ def header_handle(_self, s):
     match = re.subn( r'^(?P<header>[#]{1,5})[ ](?P<contents>.*)$', callback, s)
     return (match[0], "break") if match[1] > 0 else (match[0], "continue")
 
+def line_break_handle(_self, s):
+    match = re.sub(r'[ ]{2}$', '<br>', s)
+    return (match, "continue")
+
 def paragraph_handle(self, s):
     subbed = tag_replace(self, s, *self.state_tags["paragraph"], "paragraph")
     return (subbed, "continue")
